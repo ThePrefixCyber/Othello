@@ -6,48 +6,49 @@
 //  Copyright © 2017 Jack. All rights reserved.
 //
 
-#include <iostream>
+//TODO:
+//-make it so game will enter a move given coordinates from the AI
+//-maybe implement Game class for style points
+//-move on to AI
+    //try to use "stopwatch" to keep looking ahead for 1s then return best move
+
+#include "Othello.hpp"
 using namespace std;
 
 char board[8][8]; // blank = '_', white = O, black = X
 int turnCount;
 bool gameEnd;
+char thisMark;
 
-int newBoard();
-int drawBoard();
-int move();
-bool isLegal(int, int);
-char getMark(int turn = turnCount);
-int test(int, int, char);
-int flip(int, int);
-int lineTest(int, int, int, int, char);
-int lineFlip(int, int, int, int, char);
-char count();
 
 int main(int argc, const char * argv[]) {
     
     while(1){
         turnCount=1;
+        thisMark = 'O';
         gameEnd=0;
         newBoard();
         drawBoard();
         cout << "Start game";
         while(!gameEnd){
-            if(!move()){
-                break;
+            if(areLegalMoves()) {
+                if(!move()){
+                    break;
+                }
+                drawBoard();
+                if(turnCount>=60) gameEnd=1;
+                cout << "Turn " << turnCount << endl;
             }
-            drawBoard();
-            if(turnCount>=8) gameEnd=1;
-            cout << "Turn " << turnCount << endl;
+            thisMark = nextMark();
             turnCount++;
         }
-        cout << "End game: " << endl;
+        cout << "End game" << endl;
         switch(count()){
             case 'X':
-                cout << "X wins\n";
+                cout << "X wins!\n";
                 break;
             case 'O':
-                cout << "O wins\n";
+                cout << "O wins!\n";
                 break;
             case '_':
                 cout << "Tie\n";
@@ -91,7 +92,7 @@ int drawBoard(){
 
 int move(){
     cout << "  " << endl;
-    char mark = getMark();
+    char mark = thisMark;
     int x;
     int y;
     cout << "Enter move: " << mark << endl;
@@ -111,6 +112,7 @@ int move(){
     }
     else{
         cout << "Illegal move";
+        thisMark = nextMark();
         turnCount--;
     }
     
@@ -119,7 +121,7 @@ int move(){
 
 bool isLegal(int x, int y){
     
-    char mark = getMark(turnCount-1);
+    char mark = nextMark();
     
     //Case 0: Out of Bounds
     if(x<0||x>7||y<0||y>7){
@@ -197,7 +199,8 @@ int lineTest(int x, int y, int dx, int dy, char mark){
 }
 
 int flip(int x, int y){
-    char mark = getMark(turnCount -1);
+    
+    char mark = nextMark();
     lineFlip(x,y,-1,-1, mark);
     lineFlip(x,y,-1,0, mark);
     lineFlip(x,y,-1,1, mark);
@@ -233,28 +236,12 @@ int lineFlip(int x, int y, int dx, int dy, char mark){ //mark is the enemy piece
     
     //If next cell is anti-mark, and we are mark, flip and return
     if(board[x][y]==mark){
-        cout << board[x+dx][y+dy];
         board[x][y]=board[x+dx][y+dy];
         return 1;
     }
     
     //If next cell is anti-mark, and we are anti-mark, fail
     return 0;
-}
-
-char getMark(int turn){
-    char mark;
-    switch(turn%2){
-        case 0:
-            mark = 'X';
-            break;
-        case 1:
-            mark = 'O';
-            break;
-        default:
-            cout << "error in getMark";
-    }
-    return mark;
 }
 
 char count(){
@@ -285,5 +272,25 @@ char count(){
         result = '_';
     }
     else result = 0;
+    
+    cout << "O: " << oSum << endl;
+    cout << "X: " << xSum << endl;
     return result;
+}
+
+bool areLegalMoves(){
+    
+    for(int i=0;i<8;i++){
+        for(int j=0;j<8;j++){
+            if(isLegal(i,j)) return 1;
+        }
+    }
+    
+    return 0;
+}
+
+char nextMark(){
+    if(thisMark=='O') return 'X';
+    else if(thisMark=='X') return 'O';
+    return '_';
 }
